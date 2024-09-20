@@ -25,10 +25,15 @@
   },
   "homepage": "https://github.com/RafiurRiyad/file_sharing_server#readme",
   "dependencies": {
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
+    "fs": "^0.0.1-security",
     "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.11.3",
     "node": "^22.9.0",
-    "nodemon": "^3.1.5"
+    "nodemon": "^3.1.5",
+    "path": "^0.12.7",
+    "sequelize": "^6.37.3"
   }
 }

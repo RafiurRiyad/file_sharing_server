@@ -1,5 +1,5 @@
 import { App } from './app.js';
-import { AppConfig } from './config.js';
+import { AppConfig } from './configs/config.js';
 
 const { port, host, environment } = AppConfig;
 

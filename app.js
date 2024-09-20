@@ -4,8 +4,8 @@ dotenv.config();
 
 import {
   FileRouter,
-} from './routes.js';
-import { AppConfig } from './config.js';
+} from './routes/routes.js';
+import { AppConfig } from './configs/config.js';
 
 /**
  * * initiate express and express community middleware
