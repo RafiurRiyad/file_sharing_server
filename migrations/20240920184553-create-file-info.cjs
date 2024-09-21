@@ -1,8 +1,6 @@
+// Instead of using `import`, use `require`
 'use strict';
 
-const { fileURLToPath } = require('url');
-
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('file_infos', {
@@ -16,8 +14,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       filePath: {
-        type: DataTypes.STRING,
-        allowNull: false,l
+        type: Sequelize.STRING
       },
       publicKey: {
         type: Sequelize.STRING

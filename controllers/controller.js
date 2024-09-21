@@ -1,5 +1,5 @@
 import { generateRandomString } from '../utilities/utility.js'
-import FileInfo from '../models/file_info.js';
+import FileInfo from '../models/file_infos.js';
 
 export const uploadFile = async (req, res, next,) => {
     try {
@@ -16,7 +16,7 @@ export const uploadFile = async (req, res, next,) => {
         const privateKey = generateRandomString();
     
         // Save file information to the database using Sequelize
-        const newFile = await FileInfo.create({
+        await FileInfo.create({
             fileName,
             filePath,
             publicKey,

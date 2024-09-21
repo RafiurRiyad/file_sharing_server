@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import Sequelize from 'sequelize';
-import sequelize from '../configs/database.js'; // Import your custom sequelize instance
+import Sequelize from 'sequelize'; 
 
 const basename = path.basename(__filename);
 const models = {};
@@ -24,6 +23,5 @@ Object.keys(models).forEach(modelName => {
 });
 
 models.sequelize = sequelize;
-models.Sequelize = Sequelize;
 
 export default models;

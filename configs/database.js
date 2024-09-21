@@ -1,9 +1,9 @@
 import { Sequelize } from 'sequelize';
 
-// Configure Sequelize with your database credentials
-const sequelize = new Sequelize('database', 'username', 'password', {
+// Initialize Sequelize instance
+const sequelize = new Sequelize('file_server', 'root', 'root1234', {
   host: 'localhost',
-  dialect: 'mysql', 
+  dialect: 'mysql',
 });
 
 export default sequelize;

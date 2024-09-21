@@ -20,7 +20,7 @@ const FileInfo = sequelize.define('FileInfo', {
     allowNull: false, 
   }
 }, {
-  tableName: 'file_info', 
+  tableName: 'file_infos', 
   timestamps: true, 
 });
 
