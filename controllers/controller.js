@@ -1,7 +1,10 @@
-import { generateRandomString } from '../utilities/utility.js'
+import { bucket } from '../configs/gcp.js';
+import { generateRandomString } from '../utilities/utility.js';
 import FileInfo from '../models/file_infos.js';
-import path from 'path';
 import fs from 'fs/promises';
+import { AppConfig } from '../configs/config.js';
+
+const { provider } = AppConfig;
 
 export const uploadFile = async (req, res, next,) => {
     try {
@@ -55,12 +58,17 @@ export const getFile = async (req, res, next,) => {
     // If fileInfo is not found, return an error response
     if (!fileInfo) {
         return res.status(404).json({ message: 'Wrong publicKey given' });
-    }
+      }
 
     // Extract the filePath from the record
     const filePath = fileInfo.filePath;
-
+    
     // Check if the file exists at the filePath
+    if (provider === 'google') {
+        return res.redirect(filePath); 
+    }
+
+    // Check if the file exists at the filePath if provide is not google 
     if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: 'File not found on server' });
     }
@@ -98,6 +106,22 @@ export const deleteFile = async (req, res, next,) => {
     // Extract the filePath from the record
     const filePath = fileInfo.filePath;
 
+    //Check if provider is google or local then do accordingly
+    if (provider === 'google') {
+        const fileName = fileRecord.filePath.split('/').pop(); // Extract the file name from the URL
+        const file = bucket.file(fileName);
+
+        try {
+            await file.delete(); // Delete from GCP
+            await fileInfo.destroy(); // Remove from database
+
+            res.status(200).json({ message: 'File deleted successfully from gcp' });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'Error deleting the file or record from gcp', error: err.message });
+        }
+    }
+
     // Check if the file exists at the filePath
     try {
         await fs.access(filePath); // Check if the file exists
@@ -113,10 +137,10 @@ export const deleteFile = async (req, res, next,) => {
         await fileInfo.destroy();
 
         // Send a success response
-        return res.status(200).json({ message: 'File deleted successfully!' });
+        return res.status(200).json({ message: 'File deleted successfully from local!' });
     } catch (err) {
         // Handle any error that occurs during file deletion or DB operation
-        return res.status(500).json({ message: 'Error deleting the file or record', error: err.message });
+        return res.status(500).json({ message: 'Error deleting the file or record from local', error: err.message });
     }
   } catch (error) {
       // Catch any unexpected errors and return a server error response

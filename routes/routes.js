@@ -5,7 +5,7 @@ import limiter from '../configs/rateLimiter.js';
 
 const fileRouter = Router();
 
-fileRouter.post('/', limiter, upload.single('file'), uploadFile);
+fileRouter.post('/', limiter, upload, uploadFile);
 fileRouter.get('/:publicKey', limiter, getFile);
 fileRouter.delete('/:privateKey', deleteFile);
 

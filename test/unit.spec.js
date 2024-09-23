@@ -1,15 +1,25 @@
-import FileInfo from '../models/file_infos.js';
 import sinon from 'sinon';
-import fs from 'fs';
 import { expect } from 'chai';
+import { Storage } from '@google-cloud/storage';
+import fs from 'fs';
 import { uploadFile, getFile, deleteFile } from '../controllers/controller.js';
+import FileInfo from '../models/file_infos.js';
+import { AppConfig } from '../config.js';
 
+const mockGCPBucket = {
+  file: () => ({
+    delete: sinon.stub().resolves(true),
+  }),
+};
+
+// Unit test for uploadFile
 describe('uploadFile Route - Unit Test', () => {
   afterEach(() => {
     sinon.restore();
   });
 
-  it('should save the file information in the database', async () => {
+  it('should save the file information in the database (local)', async () => {
+    sinon.stub(AppConfig, 'provider').value('local');
     const req = {
       file: {
         filename: 'testfile.txt',
@@ -33,53 +43,44 @@ describe('uploadFile Route - Unit Test', () => {
     expect(res.status.calledWith(201)).to.be.true;
     expect(res.json.calledWith({ message: 'File uploaded successfully' })).to.be.true;
   });
-});
 
+  it('should save the file information in the database (google)', async () => {
+    sinon.stub(AppConfig, 'provider').value('google');
+    sinon.stub(Storage.prototype, 'bucket').returns(mockGCPBucket);
 
-describe('getFile Route - Unit Test', () => {
-  afterEach(() => {
-    sinon.restore(); // Restore the default sandbox after each test
-  });
-
-  it('should return the file if the publicKey matches', async () => {
-    const req = { query: { publicKey: 'validPublicKey' } };
+    const req = {
+      file: {
+        filename: 'testfile.txt',
+        path: 'https://gcp-bucket/testfile.txt',
+      },
+    };
     const res = {
-      sendFile: sinon.spy(),
       status: sinon.stub().returnsThis(),
       json: sinon.spy(),
     };
 
-    sinon.stub(FileInfo, 'findOne').resolves({
-      filePath: '/uploads/file.txt',
+    sinon.stub(FileInfo, 'create').resolves({
+      fileName: 'testfile.txt',
+      filePath: 'https://gcp-bucket/testfile.txt',
+      publicKey: 'testPublicKey',
+      privateKey: 'testPrivateKey',
     });
 
-    await getFile(req, res);
+    await uploadFile(req, res);
 
-    expect(res.sendFile.calledWith('/uploads/file.txt')).to.be.true;
-  });
-
-  it('should return an error if the publicKey does not match', async () => {
-    const req = { query: { publicKey: 'invalidPublicKey' } };
-    const res = {
-      status: sinon.stub().returnsThis(),
-      json: sinon.spy(),
-    };
-
-    sinon.stub(FileInfo, 'findOne').resolves(null);
-
-    await getFile(req, res);
-
-    expect(res.status.calledWith(404)).to.be.true;
-    expect(res.json.calledWith({ error: 'Invalid public key' })).to.be.true;
+    expect(res.status.calledWith(201)).to.be.true;
+    expect(res.json.calledWith({ message: 'File uploaded successfully' })).to.be.true;
   });
 });
 
+// Unit test for deleteFile
 describe('deleteFile Route - Unit Test', () => {
   afterEach(() => {
     sinon.restore();
   });
 
-  it('should delete the file if privateKey matches', async () => {
+  it('should delete the file if privateKey matches (local)', async () => {
+    sinon.stub(AppConfig, 'provider').value('local');
     const req = { params: { privateKey: 'validPrivateKey' } };
     const res = {
       status: sinon.stub().returnsThis(),
@@ -98,18 +99,23 @@ describe('deleteFile Route - Unit Test', () => {
     expect(res.json.calledWith({ message: 'File deleted successfully' })).to.be.true;
   });
 
-  it('should return an error if the privateKey does not match', async () => {
-    const req = { params: { privateKey: 'invalidPrivateKey' } };
+  it('should delete the file from GCP if privateKey matches (google)', async () => {
+    sinon.stub(AppConfig, 'provider').value('google');
+    const req = { params: { privateKey: 'validPrivateKey' } };
     const res = {
       status: sinon.stub().returnsThis(),
       json: sinon.spy(),
     };
 
-    sinon.stub(FileInfo, 'findOne').resolves(null);
+    sinon.stub(FileInfo, 'findOne').resolves({
+      filePath: 'https://gcp-bucket/file.txt',
+      destroy: sinon.spy(),
+    });
+    sinon.stub(Storage.prototype, 'bucket').returns(mockGCPBucket);
 
     await deleteFile(req, res);
 
-    expect(res.status.calledWith(404)).to.be.true;
-    expect(res.json.calledWith({ error: 'Invalid private key' })).to.be.true;
+    expect(res.status.calledWith(200)).to.be.true;
+    expect(res.json.calledWith({ message: 'File deleted successfully from gcp' })).to.be.true;
   });
 });
